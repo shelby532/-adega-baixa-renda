@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adega Baixa Renda</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f3f3f3;margin:0;color:#111}
+header{background:#111;color:white;padding:22px;text-align:center}
+main{max-width:700px;margin:auto;padding:15px 12px 80px}
+.card,.item{background:white;border-radius:15px;padding:15px;margin:10px 0;box-shadow:0 2px 8px #0001}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.big{font-size:28px;font-weight:bold}
+input,select,button{font-size:16px;border-radius:10px;padding:12px;border:1px solid #ddd}
+input,select{width:100%;margin:5px 0 10px;box-sizing:border-box}
+button{background:#111;color:white;border:0;font-weight:bold}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.small{font-size:13px;color:#777}.low{color:#c00;font-weight:bold}
+.add{position:fixed;right:20px;bottom:20px;width:58px;height:58px;border-radius:50%;font-size:28px}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end}
+.modal>div{background:white;width:100%;padding:20px;border-radius:20px 20px 0 0}
+</style>
+</head>
+<body>
+<header><h2>🍺 Adega Baixa Renda</h2><div>Controle de estoque</div></header>
+<main>
+<div class="cards">
+<div class="card"><div class="big" id="total">0</div><div class="small">Produtos</div></div>
+<div class="card"><div class="big" id="baixo">0</div><div class="small">Estoque baixo</div></div>
+</div>
+<div class="card">
+<input id="busca" placeholder="🔎 Procurar produto" oninput="mostrar()">
+<div id="lista"></div>
+</div>
+</main>
+<button class="add" onclick="abrir()">+</button>
+<div class="modal" id="modal"><div>
+<h2 id="titulo">Adicionar produto</h2>
+<input id="nome" placeholder="Nome do produto">
+<select id="categoria"><option>Bebidas</option><option>Cerveja</option><option>Destilados</option><option>Vinho</option><option>Energético</option><option>Refrigerante</option><option>Água</option><option>Gelo</option><option>Carvão</option><option>Outros</option></select>
+<input id="qtd" type="number" min="0" placeholder="Quantidade">
+<input id="min" type="number" min="0" placeholder="Estoque mínimo">
+<button onclick="salvar()">Salvar</button>
+<button style="background:#ddd;color:#111" onclick="fechar()">Cancelar</button>
+</div></div>
+<script>
+let produtos=JSON.parse(localStorage.getItem("adega"))||[],edit=null;
+function guardar(){localStorage.setItem("adega",JSON.stringify(produtos))}
+function mostrar(){
+let q=document.getElementById("busca").value.toLowerCase(),arr=produtos.filter(p=>p.nome.toLowerCase().includes(q));
+total.textContent=produtos.length;baixo.textContent=produtos.filter(p=>p.qtd<=p.min).length;
+lista.innerHTML=arr.length?arr.map(p=>{let i=produtos.indexOf(p);return `<div class="item"><div class="row"><div><b>${p.nome}</b><div class="small">${p.cat} · mínimo ${p.min}</div>${p.qtd<=p.min?'<div class="low">⚠️ Estoque baixo</div>':''}</div><div class="row"><button onclick="mudar(${i},-1)">−</button><b>${p.qtd}</b><button onclick="mudar(${i},1)">+</button></div></div><div style="margin-top:8px"><button onclick="editar(${i})">Editar</button> <button style="background:#c00" onclick="excluir(${i})">Excluir</button></div></div>`}).join(""):"<p class='small'>Nenhum produto. Toque no + para adicionar.</p>"}
+function mudar(i,n){produtos[i].qtd=Math.max(0,produtos[i].qtd+n);guardar();mostrar()}
+function abrir(i=null){edit=i;titulo.textContent=i===null?"Adicionar produto":"Editar produto";let p=i===null?{}:produtos[i];nome.value=p.nome||"";categoria.value=p.cat||"Bebidas";qtd.value=p.qtd??"";min.value=p.min??"";modal.style.display="flex"}
+function fechar(){modal.style.display="none"}
+function salvar(){if(!nome.value.trim())return alert("Digite o nome.");let p={nome:nome.value.trim(),cat:categoria.value,qtd:Math.max(0,+qtd.value||0),min:Math.max(0,+min.value||0)};if(edit===null)produtos.push(p);else produtos[edit]=p;guardar();fechar();mostrar()}
+function editar(i){abrir(i)}
+function excluir(i){if(confirm("Excluir este produto?")){produtos.splice(i,1);guardar();mostrar()}}
+mostrar();
+</script>
+</body></html>
